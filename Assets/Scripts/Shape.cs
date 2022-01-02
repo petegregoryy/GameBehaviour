@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Collections.Specialized;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,22 +8,36 @@ using UnityEngine;
 public class Shape : MonoBehaviour
 {
     [SerializeField]
+    bool rectangle = false;
+    [SerializeField]
     int points = 4;
     [SerializeField]
-    int rad = 2;
+    float rad = 2;
     float maxMag = float.MinValue;
+
+    public Vector3 forwardVector;
+
+    [SerializeField]
+    bool isShip = false;
     public bool colliding = false;
     public bool broadPhase = false;
     public List<Vector2> vertices;
     public float broadPhaseRadius;
 
+[SerializeField]
+    public LineRenderer lr;
+
     [SerializeField]
-    List<Vector2> localVertices;
+    public List<Vector2> localVertices;
+
+    public float[,] rotMat;
     // Start is called before the first frame update
     void Start()
     {
+        rotMat = new float[2,2];
         const float radians360 = 6.283185f;
-        
+        lr = this.GetComponent<LineRenderer>();
+        rad = UnityEngine.Random.Range(2.0f,5.0f);
         float perStep = radians360 / points;
         float angle = 0;
         for (int i = 0; i < points; i++)
@@ -36,6 +52,19 @@ public class Shape : MonoBehaviour
             angle += perStep;
         }
         broadPhaseRadius = maxMag * 1.5f;
+
+        if(isShip){
+            this.transform.position = new Vector3(0,0,0);
+            localVertices.Clear();
+            localVertices.Add(new Vector2(0,2.5f));
+            localVertices.Add(new Vector2(1.5f,-2.5f));
+            localVertices.Add(new Vector2(-1.5f,-2.5f));
+            forwardVector = Vec2ToVec3(localVertices[0]) - this.transform.position ;
+            float forwardMag = (float)Math.Sqrt((forwardVector.x * forwardVector.x)+(forwardVector.y * forwardVector.y)+(forwardVector.z * forwardVector.z));
+            forwardVector = new Vector3(forwardVector.x / forwardMag,forwardVector.y / forwardMag,0);
+            points = 3;
+        }
+        
     }
 
     // Update is called once per frame
@@ -44,10 +73,21 @@ public class Shape : MonoBehaviour
         vertices.Clear();
         Vector2 pos = new Vector2(this.transform.position.x, this.transform.position.y);
         for (int i = 0; i < localVertices.Count; i++)
-        {
-            vertices.Add(localVertices[i] + pos);
+        {   Vector2 tempVert = localVertices[i];
+            if(isShip){
+                float x = localVertices[i].x * rotMat[0,0] + localVertices[i].y * rotMat[1,0];
+                float y = localVertices[i].x * rotMat[0,1] + localVertices[i].y * rotMat[1,1];
+                tempVert =  new Vector2(x,y);
+            }
+            vertices.Add(tempVert + pos);
         }
+        forwardVector = Vec2ToVec3(vertices[0]) - this.transform.position ;
+        float forwardMag = (float)Math.Sqrt((forwardVector.x * forwardVector.x)+(forwardVector.y * forwardVector.y)+(forwardVector.z * forwardVector.z));
+        forwardVector = new Vector3(forwardVector.x / forwardMag,forwardVector.y / forwardMag,0);
         
+        lr.positionCount = vertices.Count + 1;
+        lr.SetPositions(Vec2ToVec3List(vertices));
+        lr.SetPosition(vertices.Count,vertices[0]);
     }
 
     public Vector3[] GetNormals(){
@@ -101,11 +141,11 @@ public class Shape : MonoBehaviour
         return Vec2ToVec3List(vertices);
     }
 
-    Vector3[] Vec2ToVec3List(List<Vector2> vecs){
-        Vector3[] temp = new Vector3[vecs.Count];
+    UnityEngine.Vector3[] Vec2ToVec3List(List<UnityEngine.Vector2> vecs){
+        UnityEngine.Vector3[] temp = new UnityEngine.Vector3[vecs.Count];
         for (int i = 0; i < vecs.Count; i++)
         {
-            temp[i] = new Vector3(vecs[i].x,vecs[i].y,0);
+            temp[i] = new UnityEngine.Vector3(vecs[i].x,vecs[i].y,0);
         }
         return temp;
     }
@@ -137,5 +177,27 @@ public class Shape : MonoBehaviour
             }            
         }
         Gizmos.DrawWireSphere(this.transform.position,broadPhaseRadius);
+    }
+
+    private UnityEngine.Vector3[] ListToArrayVec3(List<UnityEngine.Vector3> l){
+        UnityEngine.Vector3[] temp = {};
+        for (int i = 0; i < l.Count; i++)
+        {
+            temp[i] = l[i];
+        }
+        return temp;
+    }
+
+    private Vector3 Vec2ToVec3(Vector2 vec){
+        return new Vector3(vec.x,vec.y,0);
+    }
+
+    public void ApplyMatToVerts(float[,] mat){
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            float x = vertices[i].x * mat[0,0] + vertices[i].y * mat[1,0];
+            float y = vertices[i].x * mat[0,1] + vertices[i].y * mat[1,1];
+            vertices[i] =  new Vector2(x,y);
+        }
     }
 }

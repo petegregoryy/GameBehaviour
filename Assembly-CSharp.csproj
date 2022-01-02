@@ -37,6 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\Dynamic.cs" />
+     <Compile Include="Assets\Scripts\GameController.cs" />
      <Compile Include="Assets\Scripts\Physics.cs" />
      <Compile Include="Assets\Scripts\SAT.cs" />
      <Compile Include="Assets\Scripts\Shape.cs" />
