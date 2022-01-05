@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class SAT : MonoBehaviour
 {
+    public GameObject gameController;
     public GameObject[] totalObjects;
     public GameObject[] objects;
     public GameObject[] prevObjects;
@@ -24,17 +25,23 @@ public class SAT : MonoBehaviour
     List<float> penAxesDistances;
     Vector3[] aVerts;
     Vector3[] bVerts;
+    
+    [SerializeField]
+    float counter = 0;
+    public float[,] minPairs;
+
     // Start is called before the first frame update
     void Start()
     {
         GameObject[] grabObjs = GameObject.FindGameObjectsWithTag("Collision Object");
-        objects = new GameObject[grabObjs.Length + 1];
+        totalObjects = new GameObject[grabObjs.Length + 1];
         for (int i = 0; i < grabObjs.Length; i++)
         {
-            objects[i] = grabObjs[i];
+            totalObjects[i] = grabObjs[i];
         }
-        objects[grabObjs.Length] = GameObject.FindGameObjectWithTag("Player");
-
+        totalObjects[grabObjs.Length] = GameObject.FindGameObjectWithTag("Player");
+        totalObjects[grabObjs.Length].GetComponent<Shape>().shapeID = grabObjs.Length;
+        minPairs = new float[grabObjs.Length+1,grabObjs.Length+1];
         for (int i = 0; i < objects.Length; i++)
         {
             for (int k = 0; k < objects.Length; k++)
@@ -47,68 +54,78 @@ public class SAT : MonoBehaviour
             }
         }
         Debug.Log(pairs.Count);
-        for (int i = 0; i < pairs.Count; i++)
-        {
-            lastMins = new float[pairs.Count];
-        }
+        // for (int i = 0; i < pairs.Count; i++)
+        // {
+        //     lastMins = new float[pairs.Count];
+        // }
     }
 
     // Update is called once per frame
     void Update()
     {
-        // List<GameObject> objs = new List<GameObject>();
+        List<GameObject> objs = new List<GameObject>();
+        objs.Add(GameObject.FindGameObjectWithTag("Player"));
+        for (int i = 0; i < totalObjects.Length; i++)
+        {
+            totalObjects[i].GetComponent<Shape>().broadPhase = false;
+        }
 
-        // for (int i = 0; i < totalObjects.Length; i++)
-        // {
-        //     totalObjects[i].GetComponent<Shape>().broadPhase = false;
-        // }
+        for (int i = 0; i < totalObjects.Length; i++)
+        {
+            for (int k = 0; k < totalObjects.Length; k++)
+            {
+                if (i < k)
+                {
+                    float aRad = totalObjects[i].GetComponent<Shape>().broadPhaseRadius;
+                    float bRad = totalObjects[k].GetComponent<Shape>().broadPhaseRadius;
+                    Vector3 vec = totalObjects[k].transform.position - totalObjects[i].transform.position;
+                    float mag = (float)Math.Sqrt((vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z));
 
-        // for (int i = 0; i < totalObjects.Length; i++)
-        // {
-        //     for (int k = 0; k < totalObjects.Length; k++)
-        //     {
-        //         if(i<k){
-        //             float aRad = totalObjects[i].GetComponent<Shape>().broadPhaseRadius;
-        //             float bRad = totalObjects[k].GetComponent<Shape>().broadPhaseRadius;
-        //             Vector3 vec = totalObjects[k].transform.position - totalObjects[i].transform.position;
-        //             float mag = (float)Math.Sqrt((vec.x * vec.x)+(vec.y * vec.y)+(vec.z * vec.z));
-        //             Debug.Log(string.Format("Magnitude: {0} Rad1: {1} Rad2 {2}",mag,aRad,bRad));
-        //             if(mag < aRad+bRad ){
-        //                 objs.Add(totalObjects[i]);
-        //                 objs.Add(totalObjects[k]);
-        //                 totalObjects[i].GetComponent<Shape>().broadPhase = totalObjects[k].GetComponent<Shape>().broadPhase = true;
-        //             }
-        //         }
-        //     }
-        // }
-        // objects = new GameObject[objs.Count];
-        // for (int i = 0; i < objs.Count; i++)
-        // {
-        //     objects[i] = objs[i];
-        // }
-        // if(prevObjects.Length == 0){
-        //     prevObjects = objects;
-        // }
-        // else if(objects != prevObjects){
-        //     pairs.Clear();
-        //     for (int i = 0; i < objects.Length; i++)
-        //     {
-        //         for (int k = 0; k < objects.Length; k++)
-        //         {
-        //             if(k > i){
-        //                 pairs.Add(i);
-        //                 pairs.Add(k);
-        //             }
-        //         }
-        //     }
-        //     Debug.Log(pairs.Count);
-        //     for (int i = 0; i < pairs.Count; i++)
-        //     {
-        //         lastMins = new float[pairs.Count];
-        //     }
-        //     prevObjects = objects;
-        // }
-        prevObjects = objects;
+                    if (mag < aRad + bRad)
+                    {
+                        Debug.Log(string.Format("Magnitude: {0} Rad1: {1} Rad2 {2} Collision: TRUE", mag, aRad, bRad));
+                        objs.Add(totalObjects[i]);
+                        objs.Add(totalObjects[k]);
+                        totalObjects[i].GetComponent<Shape>().broadPhase = totalObjects[k].GetComponent<Shape>().broadPhase = true;
+                    }
+                    else
+                    {
+                        Debug.Log(string.Format("Magnitude: {0} Rad1: {1} Rad2 {2} Collision: FALSE", mag, aRad, bRad));
+                    }
+                }
+            }
+        }
+        objects = new GameObject[objs.Count];
+        for (int i = 0; i < objs.Count; i++)
+        {
+            objects[i] = objs[i];
+        }
+        if (prevObjects.Length == 0)
+        {
+            prevObjects = objects;
+        }
+        else if (objects != prevObjects)
+        {
+            pairs.Clear();
+            for (int i = 0; i < objects.Length; i++)
+            {
+                for (int k = 0; k < objects.Length; k++)
+                {
+                    if (k > i)
+                    {
+                        pairs.Add(i);
+                        pairs.Add(k);
+                    }
+                }
+            }
+            Debug.Log(pairs.Count);
+            // for (int i = 0; i < pairs.Count; i++)
+            // {
+            //     lastMins = new float[pairs.Count];
+            // }
+            prevObjects = objects;
+        }
+        // //prevObjects = objects;
         if (prevObjects == objects)
         {
             prevObjectsMatch = true;
@@ -118,6 +135,10 @@ public class SAT : MonoBehaviour
             prevObjectsMatch = false;
         }
         SATCollision();
+        // for (int i = 0; i < totalObjects.Length; i++)
+        // {
+        //     totalObjects[i].GetComponent<Dynamic>().PhysicsUpdate();
+        // }
     }
 
     void SATCollision()
@@ -128,25 +149,35 @@ public class SAT : MonoBehaviour
             {
                 if (i % 2 == 0)
                 {
-                    Debug.Log("even: " + i);
+                    //Debug.Log("even: " + i);
                     if (Colliding(objects[pairs[i]], objects[pairs[i + 1]]))
                     {
+                        int aId = objects[pairs[i]].GetComponent<Shape>().shapeID;
+                        int bId = objects[pairs[i+1]].GetComponent<Shape>().shapeID;
                         Debug.Log("colliding!");
-
+                        //Debug.LogWarning(string.Format("A ID: {0} B ID: {1}",aId,bId));
                         objects[pairs[i]].GetComponent<Shape>().colliding = objects[pairs[i + 1]].GetComponent<Shape>().colliding = true;
                         ResolvePhysics(objects[pairs[i]], objects[pairs[i + 1]], minAxis, i);
-                        lastMins[i] = min;
+                        //lastMins[i] = min;
+                        minPairs[aId,bId] = min;
+                        minPairs[bId,aId] = min;
                         //objects[0].transform.position += (minAxis*min);                        
                     }
                     else
                     {
+                        int aId = objects[pairs[i]].GetComponent<Shape>().shapeID;
+                        int bId = objects[pairs[i+1]].GetComponent<Shape>().shapeID;
+                        //Debug.LogWarning(string.Format("A ID: {0} B ID: {1}",aId,bId));
                         objects[pairs[i]].GetComponent<Shape>().colliding = objects[pairs[i + 1]].GetComponent<Shape>().colliding = false;
-                        lastMins[i] = float.MinValue;
+                        //lastMins[i] = float.MinValue;
+                        minPairs[aId,bId] = float.MinValue;
+                        minPairs[bId,aId] = float.MinValue;
                     }
+                    Debug.Log(minPairs);
                 }
                 else
                 {
-                    Debug.Log("odd: " + i);
+                    //Debug.Log("odd: " + i);
                 }
             }
         }
@@ -307,7 +338,8 @@ public class SAT : MonoBehaviour
 
     int ResolvePhysics(GameObject objA, GameObject objB, Vector3 collisionNormal, int index)
     {
-
+        int aId = objA.GetComponent<Shape>().shapeID;
+        int bId = objB.GetComponent<Shape>().shapeID;
         Debug.Log(min + " : " + minAxis);
         Vector3 relativeVelocity = objB.GetComponent<Dynamic>().velocity - objA.GetComponent<Dynamic>().velocity;
         float velAlongNormal = Vector3.Dot(relativeVelocity, collisionNormal);
@@ -318,16 +350,27 @@ public class SAT : MonoBehaviour
         {
             return -1;
         }
-        if (lastMins[index] > 0)
+        if (minPairs[aId,bId] > 0)
         {
-            Debug.LogWarning("Double Collision");
+            Debug.LogWarning(string.Format("Double Collision, Dumping! aId: {0} bId: {1}",aId,bId));
             return -1;
         }
-        if (lastMins[index] == float.MinValue)
+        if (minPairs[bId,aId] > 0)
         {
-            lastMins[index] = min;
+            Debug.LogWarning(string.Format("Double Collision, Dumping! aId: {0} bId: {1}",aId,bId));
+            return -1;
         }
-        float restitution = 1f;
+        if (minPairs[aId,bId] == float.MinValue)
+        {
+            minPairs[aId,bId] = min;
+            minPairs[bId,aId] = min;
+        }
+        if (minPairs[bId,aId] == float.MinValue)
+        {
+            minPairs[aId,bId] = min;
+            minPairs[bId,aId] = min;
+        }
+        float restitution = 0.8f;
         double impulseScale = -(restitution) * velAlongNormal;
         impulseScale = impulseScale / (1 / objA.GetComponent<Dynamic>().mass) + (1 / objB.GetComponent<Dynamic>().mass);
         Vector3 impulseTotal = (float)impulseScale * collisionNormal;

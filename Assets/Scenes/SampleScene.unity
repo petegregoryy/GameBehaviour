@@ -292,6 +292,7 @@ MonoBehaviour:
   broadPhase: 0
   vertices: []
   broadPhaseRadius: 0
+  rotAngle: 0
   lr: {fileID: 0}
   localVertices: []
 --- !u!4 &1183250819
@@ -447,7 +448,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1281186079}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -50, y: 30, z: -117.78718}
+  m_LocalPosition: {x: -45.7, y: 26.39, z: -117.78718}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

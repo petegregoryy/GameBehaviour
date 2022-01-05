@@ -15,6 +15,8 @@ public class Shape : MonoBehaviour
     float rad = 2;
     float maxMag = float.MinValue;
 
+    public int shapeID = -1;
+
     public Vector3 forwardVector;
 
     [SerializeField]
@@ -24,6 +26,8 @@ public class Shape : MonoBehaviour
     public List<Vector2> vertices;
     public float broadPhaseRadius;
 
+    public float rotAngle = 0f;
+
 [SerializeField]
     public LineRenderer lr;
 
@@ -31,13 +35,22 @@ public class Shape : MonoBehaviour
     public List<Vector2> localVertices;
 
     public float[,] rotMat;
+
+    [SerializeField]
+    float counter = 0;
     // Start is called before the first frame update
     void Start()
     {
         rotMat = new float[2,2];
+        rotMat[0, 0] = Mathf.Cos(rotAngle);
+        rotMat[0, 1] = -Mathf.Sin(rotAngle);
+        rotMat[1, 0] = Mathf.Sin(rotAngle);
+        rotMat[1, 1] = Mathf.Cos(rotAngle);
         const float radians360 = 6.283185f;
+
         lr = this.GetComponent<LineRenderer>();
-        rad = UnityEngine.Random.Range(2.0f,5.0f);
+
+        rad = UnityEngine.Random.Range(0.5f,2.0f);
         float perStep = radians360 / points;
         float angle = 0;
         for (int i = 0; i < points; i++)
@@ -51,7 +64,7 @@ public class Shape : MonoBehaviour
             localVertices.Add((pointVector * mag));
             angle += perStep;
         }
-        broadPhaseRadius = maxMag * 1.5f;
+        broadPhaseRadius = maxMag * 1.1f;
 
         if(isShip){
             this.transform.position = new Vector3(0,0,0);
@@ -63,22 +76,33 @@ public class Shape : MonoBehaviour
             float forwardMag = (float)Math.Sqrt((forwardVector.x * forwardVector.x)+(forwardVector.y * forwardVector.y)+(forwardVector.z * forwardVector.z));
             forwardVector = new Vector3(forwardVector.x / forwardMag,forwardVector.y / forwardMag,0);
             points = 3;
-        }
-        
+        }        
     }
 
     // Update is called once per frame
     void Update()
     {
+        PhysicsUpdate();
+    }
+
+    void PhysicsUpdate(){
+        if(!isShip){
+            rotAngle += 1 * Time.deltaTime;
+            rotMat[0, 0] = Mathf.Cos(rotAngle);
+            rotMat[0, 1] = -Mathf.Sin(rotAngle);
+            rotMat[1, 0] = Mathf.Sin(rotAngle);
+            rotMat[1, 1] = Mathf.Cos(rotAngle);
+        }
+        
         vertices.Clear();
         Vector2 pos = new Vector2(this.transform.position.x, this.transform.position.y);
         for (int i = 0; i < localVertices.Count; i++)
         {   Vector2 tempVert = localVertices[i];
-            if(isShip){
-                float x = localVertices[i].x * rotMat[0,0] + localVertices[i].y * rotMat[1,0];
-                float y = localVertices[i].x * rotMat[0,1] + localVertices[i].y * rotMat[1,1];
-                tempVert =  new Vector2(x,y);
-            }
+            
+            float x = localVertices[i].x * rotMat[0,0] + localVertices[i].y * rotMat[1,0];
+            float y = localVertices[i].x * rotMat[0,1] + localVertices[i].y * rotMat[1,1];
+            tempVert =  new Vector2(x,y);
+            
             vertices.Add(tempVert + pos);
         }
         forwardVector = Vec2ToVec3(vertices[0]) - this.transform.position ;

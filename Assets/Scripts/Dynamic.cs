@@ -32,15 +32,12 @@ public class Dynamic : MonoBehaviour
         if (!isShip)
         {
             velocity = new Vector3(UnityEngine.Random.Range(-5, 5), UnityEngine.Random.Range(-5, 5), 0);
-            mass = UnityEngine.Random.Range(90f, 110f);
+            mass = UnityEngine.Random.Range(100f, 150f);
         }
     }
 
     // Update is called once per frame
-    void Update()
-    {
-
-
+    void Update(){
         if (velocity.x != 0 || velocity.y != 0)
         {
             this.transform.position += velocity * Time.deltaTime;
@@ -155,7 +152,7 @@ public class Dynamic : MonoBehaviour
                         }
 
                 }
-                velocity += new Vector3(addVector.x/2, addVector.y/2, 0);
+                velocity += new Vector3(addVector.x*50, addVector.y*50, 0) * Time.deltaTime;
 
 
             }
@@ -169,19 +166,29 @@ public class Dynamic : MonoBehaviour
             }
         }
 
+        
 
 
-        if (this.transform.position.x > 50 || this.transform.position.x < -50)
+        if (this.transform.position.x > 47)
         {
-            this.transform.position = new Vector3(this.transform.position.x * -1, this.transform.position.y, 0);
+            this.transform.position = new Vector3((this.transform.position.x -1) * -1, this.transform.position.y, 0);
         }
-        if (this.transform.position.y > 30 || this.transform.position.y < -30)
+        if (this.transform.position.y > 27)
         {
-            this.transform.position = new Vector3(this.transform.position.x, this.transform.position.y * -1, 0);
+            this.transform.position = new Vector3(this.transform.position.x, (this.transform.position.y -1) * -1, 0);
+        }
+        if (this.transform.position.x < -47)
+        {
+            this.transform.position = new Vector3((this.transform.position.x +1) * -1, this.transform.position.y, 0);
+        }
+        if (this.transform.position.y < -27)
+        {
+            this.transform.position = new Vector3(this.transform.position.x, (this.transform.position.y +1) * -1, 0);
         }
 
 
     }
+
     UnityEngine.Vector3 Vec2ToVec3(UnityEngine.Vector2 vec)
     {
         return new UnityEngine.Vector3(vec.x, vec.y, 0);
