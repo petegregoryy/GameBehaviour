@@ -7,37 +7,57 @@ using UnityEngine;
 
 public class Shape : MonoBehaviour
 {
+    
+
+    
+
+    
+
+
+
+    
+
+    
+    [Header("Shape Details")]
+    [SerializeField]
+    public List<Vector2> localVertices;
+    public List<Vector2> vertices;
+
+    [SerializeField]
+    public LineRenderer lr;
+
     [SerializeField]
     bool rectangle = false;
     [SerializeField]
     int points = 4;
+    public int shapeID = -1; 
+
+    [Header("Physics")]
+    public float[,] rotMat;
+    public float rotAngle = 0f;
+    public bool colliding = false;
+    public bool broadPhase = false;
     [SerializeField]
     float rad = 2;
     float maxMag = float.MinValue;
 
-    public int shapeID = -1;
-
-    public Vector3 forwardVector;
-
-    [SerializeField]
-    bool isShip = false;
-    public bool colliding = false;
-    public bool broadPhase = false;
-    public List<Vector2> vertices;
     public float broadPhaseRadius;
 
-    public float rotAngle = 0f;
+    [Header("Asteroid Settings")]
+    public float rotationValue = 0;
 
-[SerializeField]
-    public LineRenderer lr;
-
+    [Header("Ship Settings")]
     [SerializeField]
-    public List<Vector2> localVertices;
+    public bool isShip = false;
+    public bool isEnemy = false;
 
-    public float[,] rotMat;
+    public Vector3 forwardVector;
+    public bool thrusting = false;
+    public GameObject thruster;
+    Vector3[] localthrustVerts = {new Vector3(0.4f,-0.8f,0),new Vector3(0.0f,-1.5f,0),new Vector3(-0.4f,-0.8f,0)};
+    Vector3[] thrustVerts = new Vector3[3];
 
-    [SerializeField]
-    float counter = 0;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -56,7 +76,7 @@ public class Shape : MonoBehaviour
         for (int i = 0; i < points; i++)
         {
             Vector2 pointVector = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
-            Debug.Log(pointVector);
+            //Debug.Log(pointVector);
             float mag = UnityEngine.Random.Range(rad * 0.8f, rad * 1.2f);
             if(mag > maxMag){
                 maxMag = mag;
@@ -67,27 +87,56 @@ public class Shape : MonoBehaviour
         broadPhaseRadius = maxMag * 1.1f;
 
         if(isShip){
+            broadPhaseRadius = 1.2f;
             this.transform.position = new Vector3(0,0,0);
             localVertices.Clear();
-            localVertices.Add(new Vector2(0,2.5f));
-            localVertices.Add(new Vector2(1.5f,-2.5f));
-            localVertices.Add(new Vector2(-1.5f,-2.5f));
+            localVertices.Add(new Vector2(0,1.0f));
+            localVertices.Add(new Vector2(0.8f,-1.0f));
+            localVertices.Add(new Vector2(0,-0.6f));
+            localVertices.Add(new Vector2(-0.8f,-1.0f));
             forwardVector = Vec2ToVec3(localVertices[0]) - this.transform.position ;
             float forwardMag = (float)Math.Sqrt((forwardVector.x * forwardVector.x)+(forwardVector.y * forwardVector.y)+(forwardVector.z * forwardVector.z));
             forwardVector = new Vector3(forwardVector.x / forwardMag,forwardVector.y / forwardMag,0);
-            points = 3;
-        }        
+            points = 4;
+        }
+        else if(isEnemy){
+             broadPhaseRadius = 1.2f;
+            this.transform.position = new Vector3(-44,24,0);
+            localVertices.Clear();
+            localVertices.Add(new Vector2(0,1.0f));
+            localVertices.Add(new Vector2(1,0f));
+            localVertices.Add(new Vector2(0,-1f));
+            localVertices.Add(new Vector2(-1f,-0f));
+            forwardVector = Vec2ToVec3(localVertices[0]) - this.transform.position ;
+            float forwardMag = (float)Math.Sqrt((forwardVector.x * forwardVector.x)+(forwardVector.y * forwardVector.y)+(forwardVector.z * forwardVector.z));
+            forwardVector = new Vector3(forwardVector.x / forwardMag,forwardVector.y / forwardMag,0);
+            points = 4;
+        }
+        else{
+            rotationValue = UnityEngine.Random.Range(-1f,1f);
+        }  
     }
 
     // Update is called once per frame
     void Update()
     {
+        if(isShip){
+            if(thrusting){
+                thruster.GetComponent<LineRenderer>().SetPositions(thrustVerts);
+            }
+            else{
+                thruster.GetComponent<LineRenderer>().SetPosition(0,new Vector3(100,100,0));
+                thruster.GetComponent<LineRenderer>().SetPosition(1,new Vector3(100,100,0));
+                thruster.GetComponent<LineRenderer>().SetPosition(2,new Vector3(100,100,0));
+            }
+        }
+        
         PhysicsUpdate();
     }
 
     void PhysicsUpdate(){
         if(!isShip){
-            rotAngle += 1 * Time.deltaTime;
+            rotAngle += rotationValue * Time.deltaTime;
             rotMat[0, 0] = Mathf.Cos(rotAngle);
             rotMat[0, 1] = -Mathf.Sin(rotAngle);
             rotMat[1, 0] = Mathf.Sin(rotAngle);
@@ -104,6 +153,15 @@ public class Shape : MonoBehaviour
             tempVert =  new Vector2(x,y);
             
             vertices.Add(tempVert + pos);
+        }
+        for (int i = 0; i < localthrustVerts.Length; i++)
+        {   Vector2 tempVert = localthrustVerts[i];
+            
+            float x = localthrustVerts[i].x * rotMat[0,0] + localthrustVerts[i].y * rotMat[1,0];
+            float y = localthrustVerts[i].x * rotMat[0,1] + localthrustVerts[i].y * rotMat[1,1];
+            tempVert =  new Vector2(x,y);
+            
+            thrustVerts[i] = (tempVert + pos);
         }
         forwardVector = Vec2ToVec3(vertices[0]) - this.transform.position ;
         float forwardMag = (float)Math.Sqrt((forwardVector.x * forwardVector.x)+(forwardVector.y * forwardVector.y)+(forwardVector.z * forwardVector.z));

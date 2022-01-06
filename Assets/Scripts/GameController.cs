@@ -17,7 +17,7 @@ public class GameController : MonoBehaviour
     {
         for (int i = 0; i < asteroidCount; i++)
         {
-            GameObject obj = Instantiate(asteroid,new Vector3(Random.Range(-40,40),Random.Range(-25,25),0),this.transform.rotation);
+            GameObject obj = Instantiate(asteroid,new Vector3(Random.Range(-40,40),Random.Range(-20,20),0),this.transform.rotation);
             obj.GetComponent<Shape>().shapeID = i;
         }
     }

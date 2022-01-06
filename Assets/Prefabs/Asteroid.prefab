@@ -45,15 +45,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2484df65a3a79ede58fe8fc31b894eae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  localVertices: []
+  vertices: []
+  lr: {fileID: 1308184312625852052}
   rectangle: 0
   points: 6
-  rad: 2
+  shapeID: -1
+  rotAngle: 0
   colliding: 0
   broadPhase: 0
-  vertices: []
+  rad: 2
   broadPhaseRadius: 0
-  lr: {fileID: 1308184312625852052}
-  localVertices: []
+  rotationValue: 0
+  isShip: 0
+  forwardVector: {x: 0, y: 0, z: 0}
+  thrusting: 0
+  thruster: {fileID: 0}
 --- !u!114 &1308184312625852053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69,6 +76,8 @@ MonoBehaviour:
   ObjPos: {x: 0, y: 0, z: 0}
   velocity: {x: 10, y: 0, z: 0}
   mass: 1000
+  isShip: 0
+  angle: 0
 --- !u!120 &1308184312625852052
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -163,4 +172,4 @@ LineRenderer:
     shadowBias: 0.5
     generateLightingData: 0
   m_UseWorldSpace: 1
-  m_Loop: 0
+  m_Loop: 1

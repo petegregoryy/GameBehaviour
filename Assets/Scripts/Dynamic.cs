@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 public class Dynamic : MonoBehaviour
@@ -19,6 +20,10 @@ public class Dynamic : MonoBehaviour
     [SerializeField]
     float angle = 0f;
 
+    public bool isDead = false;
+
+    public GameObject deadText;
+
     // public List<List<float>> this.GetComponent<Shape().rotmat;
 
 
@@ -32,16 +37,20 @@ public class Dynamic : MonoBehaviour
         if (!isShip)
         {
             velocity = new Vector3(UnityEngine.Random.Range(-5, 5), UnityEngine.Random.Range(-5, 5), 0);
-            mass = UnityEngine.Random.Range(100f, 150f);
+            mass = UnityEngine.Random.Range(100f, 200f);
         }
     }
 
     // Update is called once per frame
-    void Update(){
-        if (velocity.x != 0 || velocity.y != 0)
-        {
-            this.transform.position += velocity * Time.deltaTime;
+    void Update()
+    {   
+        if(velocity.x != float.NaN && velocity.y != float.NaN){
+            if (velocity.x != 0 || velocity.y != 0 )
+            {
+                this.transform.position += velocity * Time.deltaTime;
+            }
         }
+        
 
         if (isShip)
         {
@@ -50,85 +59,97 @@ public class Dynamic : MonoBehaviour
             this.GetComponent<Shape>().rotMat[1, 0] = Mathf.Sin(angle);
             this.GetComponent<Shape>().rotMat[1, 1] = Mathf.Cos(angle);
 
-
-            if (Input.GetKey("space"))
-            {
-                if(velocity.x > 25){
-                    velocity = new Vector2(25.1f,velocity.y);
+            if(isDead){
+                deadText.active = true;
+                if(Input.GetKey("r")){
+                    isDead = false;
+                    this.transform.position = new Vector3(0,0,0);
+                    velocity = new Vector3(0,0,0);
+                    deadText.active = false;
                 }
-                else if(velocity.x < -25){
-                    velocity = new Vector2(-25.1f,velocity.y);
-                }
-
-                if(velocity.y > 25){
-                    velocity = new Vector2(velocity.x,25.1f);
-                }
-                else if(velocity.y < -25){
-                    velocity = new Vector2(velocity.x,-25.1f);
-                }
-
-
-                float prevX = velocity.x;
-                float prevY = velocity.y;
-                Vector2 addVector = new Vector2(0, 0);
-                if (prevX > 25 || prevX < -25)
+            }else{
+                if (Input.GetKey("space"))
                 {
-                    if (prevX + this.GetComponent<Shape>().forwardVector.x > 25 || prevX + this.GetComponent<Shape>().forwardVector.x < -25)
+                    if (velocity.x > 25)
                     {
-                        // If X is too fast
+                        velocity = new Vector2(25.1f, velocity.y);
+                    }
+                    else if (velocity.x < -25)
+                    {
+                        velocity = new Vector2(-25.1f, velocity.y);
+                    }
 
-                        //Check Y
-                        if (prevY > 25 || prevY < -25)
+                    if (velocity.y > 25)
+                    {
+                        velocity = new Vector2(velocity.x, 25.1f);
+                    }
+                    else if (velocity.y < -25)
+                    {
+                        velocity = new Vector2(velocity.x, -25.1f);
+                    }
+
+
+                    float prevX = velocity.x;
+                    float prevY = velocity.y;
+                    Vector2 addVector = new Vector2(0, 0);
+                    if (prevX > 25 || prevX < -25)
+                    {
+                        if (prevX + this.GetComponent<Shape>().forwardVector.x > 25 || prevX + this.GetComponent<Shape>().forwardVector.x < -25)
                         {
-                            //If Y is out of bounds check if adding the vel will make it further out of bounds
-                            if (prevY + this.GetComponent<Shape>().forwardVector.y > 25 || prevY + this.GetComponent<Shape>().forwardVector.y < -25)
+                            // If X is too fast
+
+                            //Check Y
+                            if (prevY > 25 || prevY < -25)
                             {
-                                // if Y will be out of bounds neither can be applied
+                                //If Y is out of bounds check if adding the vel will make it further out of bounds
+                                if (prevY + this.GetComponent<Shape>().forwardVector.y > 25 || prevY + this.GetComponent<Shape>().forwardVector.y < -25)
+                                {
+                                    // if Y will be out of bounds neither can be applied
+                                }
+                                else
+                                {
+                                    // Y will not be out of bounds, apply Y;
+                                    addVector = new Vector2(0, this.GetComponent<Shape>().forwardVector.y);
+                                }
                             }
                             else
                             {
-                                // Y will not be out of bounds, apply Y;
+                                // if Y is less than 25 apply Y
                                 addVector = new Vector2(0, this.GetComponent<Shape>().forwardVector.y);
                             }
                         }
                         else
                         {
-                            // if Y is less than 25 apply Y
-                            addVector = new Vector2(0, this.GetComponent<Shape>().forwardVector.y);
+                            // If X wont increase too fast
+
+                            //Check Y
+                            if (prevY > 25 || prevY < -25)
+                            {
+                                //If Y is out of bounds check if adding the vel will make it further out of bounds
+                                if (prevY + this.GetComponent<Shape>().forwardVector.y > 25 || prevY + this.GetComponent<Shape>().forwardVector.y < -25)
+                                {
+                                    // if Y will be out of bounds apply X
+                                    addVector = new Vector2(this.GetComponent<Shape>().forwardVector.x, 0);
+                                }
+                                else
+                                {
+                                    // Y will not be out of bounds, apply Y and X;
+                                    addVector = new Vector2(this.GetComponent<Shape>().forwardVector.x, this.GetComponent<Shape>().forwardVector.y);
+                                }
+                            }
+                            else
+                            {
+                                // if Y is less than 25 apply X and Y
+                                addVector = new Vector2(this.GetComponent<Shape>().forwardVector.x, this.GetComponent<Shape>().forwardVector.y);
+                            }
+
+                            // If Y will not get faster then apply both
+                            // Else only apply X
                         }
                     }
                     else
                     {
-                        // If X wont increase too fast
-
-                        //Check Y
-                        if (prevY > 25 || prevY < -25)
-                        {
-                            //If Y is out of bounds check if adding the vel will make it further out of bounds
-                            if (prevY + this.GetComponent<Shape>().forwardVector.y > 25 || prevY + this.GetComponent<Shape>().forwardVector.y < -25)
-                            {
-                                // if Y will be out of bounds apply X
-                                addVector = new Vector2(this.GetComponent<Shape>().forwardVector.x,0);
-                            }
-                            else
-                            {
-                                // Y will not be out of bounds, apply Y and X;
-                                addVector = new Vector2(this.GetComponent<Shape>().forwardVector.x, this.GetComponent<Shape>().forwardVector.y);
-                            }
-                        }
-                        else
-                        {
-                            // if Y is less than 25 apply X and Y
-                            addVector = new Vector2(this.GetComponent<Shape>().forwardVector.x, this.GetComponent<Shape>().forwardVector.y);
-                        }
-
-                        // If Y will not get faster then apply both
-                        // Else only apply X
-                    }
-                }
-                else
-                {
-                    // If X isnt out of bounds
+                        // If X isnt out of bounds
 
                         //Check Y
                         if (prevY > 25 || prevY < -25)
@@ -137,7 +158,7 @@ public class Dynamic : MonoBehaviour
                             if (prevY + this.GetComponent<Shape>().forwardVector.y >= 25 || prevY + this.GetComponent<Shape>().forwardVector.y <= -25)
                             {
                                 // if Y will be out of bounds apply X
-                                addVector = new Vector2(this.GetComponent<Shape>().forwardVector.x,0);
+                                addVector = new Vector2(this.GetComponent<Shape>().forwardVector.x, 0);
                             }
                             else
                             {
@@ -151,39 +172,44 @@ public class Dynamic : MonoBehaviour
                             addVector = new Vector2(this.GetComponent<Shape>().forwardVector.x, this.GetComponent<Shape>().forwardVector.y);
                         }
 
+                    }
+                    velocity += new Vector3(addVector.x * 50, addVector.y * 50, 0) * Time.deltaTime;
+                    this.GetComponent<Shape>().thrusting = true;
                 }
-                velocity += new Vector3(addVector.x*50, addVector.y*50, 0) * Time.deltaTime;
+                else
+                {
+                    this.GetComponent<Shape>().thrusting = false;
+                }
+                if (Input.GetKey("right"))
+                {
+                    angle += 5f * Time.deltaTime;
+                }
+                if (Input.GetKey("left"))
+                {
+                    angle -= 5f * Time.deltaTime;
+                }
+            }
+            }
+            
 
 
-            }
-            if (Input.GetKey("right"))
-            {
-                angle += 5f * Time.deltaTime;
-            }
-            if (Input.GetKey("left"))
-            {
-                angle -= 5f  * Time.deltaTime;
-            }
-        }
-
-        
 
 
         if (this.transform.position.x > 47)
         {
-            this.transform.position = new Vector3((this.transform.position.x -1) * -1, this.transform.position.y, 0);
+            this.transform.position = new Vector3((this.transform.position.x - 1) * -1, this.transform.position.y, 0);
         }
         if (this.transform.position.y > 27)
         {
-            this.transform.position = new Vector3(this.transform.position.x, (this.transform.position.y -1) * -1, 0);
+            this.transform.position = new Vector3(this.transform.position.x, (this.transform.position.y - 1) * -1, 0);
         }
         if (this.transform.position.x < -47)
         {
-            this.transform.position = new Vector3((this.transform.position.x +1) * -1, this.transform.position.y, 0);
+            this.transform.position = new Vector3((this.transform.position.x + 1) * -1, this.transform.position.y, 0);
         }
         if (this.transform.position.y < -27)
         {
-            this.transform.position = new Vector3(this.transform.position.x, (this.transform.position.y +1) * -1, 0);
+            this.transform.position = new Vector3(this.transform.position.x, (this.transform.position.y + 1) * -1, 0);
         }
 
 

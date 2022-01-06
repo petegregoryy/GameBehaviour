@@ -26,22 +26,25 @@ public class SAT : MonoBehaviour
     Vector3[] aVerts;
     Vector3[] bVerts;
     
-    [SerializeField]
-    float counter = 0;
+    int playerId = -1;
+    int enemyId = -1;
+    
     public float[,] minPairs;
 
     // Start is called before the first frame update
     void Start()
     {
         GameObject[] grabObjs = GameObject.FindGameObjectsWithTag("Collision Object");
-        totalObjects = new GameObject[grabObjs.Length + 1];
+        totalObjects = new GameObject[grabObjs.Length + 2];
         for (int i = 0; i < grabObjs.Length; i++)
         {
             totalObjects[i] = grabObjs[i];
         }
         totalObjects[grabObjs.Length] = GameObject.FindGameObjectWithTag("Player");
-        totalObjects[grabObjs.Length].GetComponent<Shape>().shapeID = grabObjs.Length;
-        minPairs = new float[grabObjs.Length+1,grabObjs.Length+1];
+        totalObjects[grabObjs.Length+1] = GameObject.FindGameObjectWithTag("Enemy");
+        playerId = totalObjects[grabObjs.Length].GetComponent<Shape>().shapeID = grabObjs.Length;
+        enemyId = totalObjects[grabObjs.Length+1].GetComponent<Shape>().shapeID = grabObjs.Length+1;
+        minPairs = new float[grabObjs.Length+2,grabObjs.Length+2];
         for (int i = 0; i < objects.Length; i++)
         {
             for (int k = 0; k < objects.Length; k++)
@@ -65,6 +68,7 @@ public class SAT : MonoBehaviour
     {
         List<GameObject> objs = new List<GameObject>();
         objs.Add(GameObject.FindGameObjectWithTag("Player"));
+        objs.Add(GameObject.FindGameObjectWithTag("Enemy"));
         for (int i = 0; i < totalObjects.Length; i++)
         {
             totalObjects[i].GetComponent<Shape>().broadPhase = false;
@@ -83,14 +87,14 @@ public class SAT : MonoBehaviour
 
                     if (mag < aRad + bRad)
                     {
-                        Debug.Log(string.Format("Magnitude: {0} Rad1: {1} Rad2 {2} Collision: TRUE", mag, aRad, bRad));
+                        //Debug.Log(string.Format("Magnitude: {0} Rad1: {1} Rad2 {2} Collision: TRUE", mag, aRad, bRad));
                         objs.Add(totalObjects[i]);
                         objs.Add(totalObjects[k]);
                         totalObjects[i].GetComponent<Shape>().broadPhase = totalObjects[k].GetComponent<Shape>().broadPhase = true;
                     }
                     else
                     {
-                        Debug.Log(string.Format("Magnitude: {0} Rad1: {1} Rad2 {2} Collision: FALSE", mag, aRad, bRad));
+                        //Debug.Log(string.Format("Magnitude: {0} Rad1: {1} Rad2 {2} Collision: FALSE", mag, aRad, bRad));
                     }
                 }
             }
@@ -118,14 +122,10 @@ public class SAT : MonoBehaviour
                     }
                 }
             }
-            Debug.Log(pairs.Count);
-            // for (int i = 0; i < pairs.Count; i++)
-            // {
-            //     lastMins = new float[pairs.Count];
-            // }
+            //Debug.Log(pairs.Count);
+            
             prevObjects = objects;
         }
-        // //prevObjects = objects;
         if (prevObjects == objects)
         {
             prevObjectsMatch = true;
@@ -154,10 +154,13 @@ public class SAT : MonoBehaviour
                     {
                         int aId = objects[pairs[i]].GetComponent<Shape>().shapeID;
                         int bId = objects[pairs[i+1]].GetComponent<Shape>().shapeID;
-                        Debug.Log("colliding!");
+                        //Debug.Log("colliding!");
                         //Debug.LogWarning(string.Format("A ID: {0} B ID: {1}",aId,bId));
                         objects[pairs[i]].GetComponent<Shape>().colliding = objects[pairs[i + 1]].GetComponent<Shape>().colliding = true;
                         ResolvePhysics(objects[pairs[i]], objects[pairs[i + 1]], minAxis, i);
+                        if(objects[pairs[i]].GetComponent<Shape>().shapeID == playerId && objects[pairs[i+1]].GetComponent<Shape>().shapeID == enemyId || objects[pairs[i+1]].GetComponent<Shape>().shapeID == playerId && objects[pairs[i]].GetComponent<Shape>().shapeID == enemyId ){
+                            GameObject.FindGameObjectWithTag("Player").GetComponent<Dynamic>().isDead = true;
+                        }
                         //lastMins[i] = min;
                         minPairs[aId,bId] = min;
                         minPairs[bId,aId] = min;
@@ -173,7 +176,7 @@ public class SAT : MonoBehaviour
                         minPairs[aId,bId] = float.MinValue;
                         minPairs[bId,aId] = float.MinValue;
                     }
-                    Debug.Log(minPairs);
+                    //Debug.Log(minPairs);
                 }
                 else
                 {
@@ -340,24 +343,24 @@ public class SAT : MonoBehaviour
     {
         int aId = objA.GetComponent<Shape>().shapeID;
         int bId = objB.GetComponent<Shape>().shapeID;
-        Debug.Log(min + " : " + minAxis);
+        //Debug.Log(min + " : " + minAxis);
         Vector3 relativeVelocity = objB.GetComponent<Dynamic>().velocity - objA.GetComponent<Dynamic>().velocity;
         float velAlongNormal = Vector3.Dot(relativeVelocity, collisionNormal);
         // objA.transform.position += minAxis;
         // objB.transform.position -= minAxis;
-        Debug.Log(string.Format("RelativeVel: {0}, VelAlongNormal: {1}, MassA: {2}, MassB: {3}", relativeVelocity, velAlongNormal, objA.GetComponent<Dynamic>().mass, objB.GetComponent<Dynamic>().mass));
+        //Debug.Log(string.Format("RelativeVel: {0}, VelAlongNormal: {1}, MassA: {2}, MassB: {3}", relativeVelocity, velAlongNormal, objA.GetComponent<Dynamic>().mass, objB.GetComponent<Dynamic>().mass));
         if (velAlongNormal > 0 && min < 0)
         {
             return -1;
         }
         if (minPairs[aId,bId] > 0)
         {
-            Debug.LogWarning(string.Format("Double Collision, Dumping! aId: {0} bId: {1}",aId,bId));
+            //Debug.LogWarning(string.Format("Double Collision, Dumping! aId: {0} bId: {1}",aId,bId));
             return -1;
         }
         if (minPairs[bId,aId] > 0)
         {
-            Debug.LogWarning(string.Format("Double Collision, Dumping! aId: {0} bId: {1}",aId,bId));
+            //Debug.LogWarning(string.Format("Double Collision, Dumping! aId: {0} bId: {1}",aId,bId));
             return -1;
         }
         if (minPairs[aId,bId] == float.MinValue)
@@ -374,7 +377,7 @@ public class SAT : MonoBehaviour
         double impulseScale = -(restitution) * velAlongNormal;
         impulseScale = impulseScale / (1 / objA.GetComponent<Dynamic>().mass) + (1 / objB.GetComponent<Dynamic>().mass);
         Vector3 impulseTotal = (float)impulseScale * collisionNormal;
-        Debug.Log(string.Format("RelativeVel: {0}, VelAlongNormal: {1}, ImpulseScale: {2}, impulseTotal:{3}", relativeVelocity, velAlongNormal, impulseScale, impulseTotal));
+        //Debug.Log(string.Format("RelativeVel: {0}, VelAlongNormal: {1}, ImpulseScale: {2}, impulseTotal:{3}", relativeVelocity, velAlongNormal, impulseScale, impulseTotal));
         objA.GetComponent<Dynamic>().velocity -= 1 / objA.GetComponent<Dynamic>().mass * impulseTotal;
         objB.GetComponent<Dynamic>().velocity += 1 / objB.GetComponent<Dynamic>().mass * impulseTotal;
         return 0;
