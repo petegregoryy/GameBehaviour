@@ -6,6 +6,8 @@ using UnityEngine;
 public class EnemyMovement : MonoBehaviour
 {
     [SerializeField]
+    GameController gc;
+    [SerializeField]
     Vector2 target;
     [SerializeField]
     Vector2 currentCell;
@@ -37,16 +39,26 @@ public class EnemyMovement : MonoBehaviour
     Mode mode = Mode.Patrol;
 
     [SerializeField]
-    float viewRadius = 20f;
+    float viewRadius = 12f;
+
+    public float radiusIncrease = 0.01f;
+    public float speedIncrease = 0.01f;
+    
+    [SerializeField]
+    float speed = 20f;
 
     [SerializeField]
     GameObject player;
 
-    Vector2[] patrolTargets = { new Vector2(4 * 3, 4 * 3), new Vector2(4 * 21, 4 * 3), new Vector2(4 * 21, 4 * 11), new Vector2(4 * 3, 4 * 11) };
+    [Header("Gizmo Settings")]
+    [SerializeField]
+    GizmoController gz;
+
+    public Vector2[] patrolTargets = { new Vector2(4 * 3, 4 * 3), new Vector2(4 * 21, 4 * 3), new Vector2(4 * 21, 4 * 11), new Vector2(4 * 3, 4 * 11), new Vector2(4 * 12, 4 * 6),new Vector2(4 * 12, 4 * 6) };
     // Start is called before the first frame update
     void Start()
     {
-        target = patrolTargets[UnityEngine.Random.Range(0, 4)];
+        target = patrolTargets[UnityEngine.Random.Range(0, 6)];
         blocks.targetVec = target;
     }
 
@@ -54,7 +66,15 @@ public class EnemyMovement : MonoBehaviour
     void Update()
     {
         CheckView();
-
+        if(gc.started && !player.GetComponent<Dynamic>().isDead){
+            viewRadius += radiusIncrease*Time.deltaTime;
+            speed += speedIncrease*Time.deltaTime;
+        }
+        else if(player.GetComponent<Dynamic>().isDead){
+            viewRadius = 12f;
+            speed = 20f;
+        }
+        
         switch (mode)
         {
             case Mode.Patrol:
@@ -65,26 +85,26 @@ public class EnemyMovement : MonoBehaviour
                 );
                 lr.colorGradient = gradient;
                 agroCount = 0;
-                Debug.Log("Patrolling");
-                Patrol();
+                //Debug.Log("Patrolling");
+                Patrol(4.0f);
                 break;
             case Mode.Hunt:
-                Debug.Log("Hunting");
+                //Debug.Log("Hunting");
                 Hunt();
                 break;
             case Mode.Escaped:
-                Debug.Log("Escaped");
+                //Debug.Log("Escaped");
                 Escape();
                 break;
             case Mode.Agro:
-                Debug.Log("Agro");
+                //Debug.Log("Agro");
                 Agro();
 
                 break;
         }
     }
 
-    void Patrol()
+    void Patrol(float speed)
     {
         
         currentCell = blocks.shipCell;
@@ -95,10 +115,19 @@ public class EnemyMovement : MonoBehaviour
 
         if (atTarget)
         {
-            Vector2 tempTarget = patrolTargets[UnityEngine.Random.Range(0, 4)];
+            Vector2 tempTarget = patrolTargets[UnityEngine.Random.Range(0, 6)];
             while (tempTarget == target)
             {
-                tempTarget = patrolTargets[UnityEngine.Random.Range(0, 4)];
+                float x = UnityEngine.Random.Range(0,45*2);
+                float y = UnityEngine.Random.Range(0,25*2);
+                while(x%4!=0){
+                    x = UnityEngine.Random.Range(0,45*2);
+                }
+                while(y%4!=0){
+                    y = UnityEngine.Random.Range(0,25*2);
+                }
+                patrolTargets[5] = new Vector3(x,y,0);
+                tempTarget = patrolTargets[UnityEngine.Random.Range(0, 6)];
             }
             target = tempTarget;
             blocks.targetVec = target;
@@ -124,14 +153,14 @@ public class EnemyMovement : MonoBehaviour
                 float mag = (float)Math.Sqrt((vec.x * vec.x) + (vec.y * vec.y));
 
                 vec = new Vector2(vec.x / mag, vec.y / mag);
-                if (count == 30)
+                if (count == 15)
                 {
                     blocks.found = false;
                 }
-                if (count > 60)
+                if (count > 30)
                 {
 
-                    d.velocity = vec * 4;
+                    d.velocity = vec * speed;
                     count = 0;
                 }
                 else
@@ -160,7 +189,7 @@ public class EnemyMovement : MonoBehaviour
 
         if (count > 25)
         {
-            d.velocity = vec * 20;
+            d.velocity = vec * speed;
             count = 0;
         }
         else
@@ -208,7 +237,7 @@ public class EnemyMovement : MonoBehaviour
         else
         {
             agroCount++;
-            Patrol();
+            Patrol(6f);
         }
     }
 
@@ -233,7 +262,7 @@ public class EnemyMovement : MonoBehaviour
                 {
                     mode = Mode.Escaped;
                 }
-                else
+                if (mode == Mode.Agro)
                 {
                     mode = Mode.Patrol;
                 }
@@ -246,8 +275,11 @@ public class EnemyMovement : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.white;
+        if(gz.drawEnemyView){
+            Gizmos.color = Color.white;
 
-        Gizmos.DrawWireSphere(this.transform.position, viewRadius);
+            Gizmos.DrawWireSphere(this.transform.position, viewRadius);
+        }
+        
     }
 }

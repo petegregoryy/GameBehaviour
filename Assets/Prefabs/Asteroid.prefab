@@ -45,10 +45,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2484df65a3a79ede58fe8fc31b894eae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isDemo: 0
+  mode: 0
   localVertices: []
   vertices: []
   lr: {fileID: 1308184312625852052}
-  rectangle: 0
   points: 6
   shapeID: -1
   rotAngle: 0
@@ -58,9 +59,13 @@ MonoBehaviour:
   broadPhaseRadius: 0
   rotationValue: 0
   isShip: 0
+  isEnemy: 0
   forwardVector: {x: 0, y: 0, z: 0}
   thrusting: 0
   thruster: {fileID: 0}
+  gz: {fileID: 0}
+  debugObj: {fileID: 5937126157734115179, guid: 7dab20ce59f12a6dda5eab8cf8108b80,
+    type: 3}
 --- !u!114 &1308184312625852053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -73,11 +78,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8e8a972d9baea8c4943dd12177dfa5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gc: {fileID: 0}
   ObjPos: {x: 0, y: 0, z: 0}
   velocity: {x: 10, y: 0, z: 0}
   mass: 1000
   isShip: 0
   angle: 0
+  isDead: 0
+  deadText: {fileID: 0}
+  hold: 0
+  futurePos:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  gz: {fileID: 0}
+  debugObj: {fileID: 5937126157734115179, guid: 7dab20ce59f12a6dda5eab8cf8108b80,
+    type: 3}
 --- !u!120 &1308184312625852052
 LineRenderer:
   m_ObjectHideFlags: 0
