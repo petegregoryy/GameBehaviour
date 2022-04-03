@@ -2,10 +2,10 @@
 Project for Game Behaviour modue at University of Derby.
 
 ## Controls
-R - Start and Restart
-Space - Fly forward
-Left/Right - Turn left and right
-D - Open/Close Debug menu
+- **R** - Start and Restart
+- **Space** - Fly forward
+- **Left/Right** - Turn left and right
+- **D** - Open/Close Debug menu
 
 Fly around the screen collecting pink cirlces for points. Avoid asteroids as you will lose points. Avoid the enemy as he will kill you.
 
